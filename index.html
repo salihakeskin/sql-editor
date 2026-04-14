@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Eğitim Editörü</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #f8f9fa; }
+        .header { background: #9E0B2D; color: white; padding: 15px 20px; font-size: 1.2rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .main { display: flex; flex: 1; overflow: hidden; gap: 10px; padding: 10px; }
+        .editor-section { flex: 1; display: flex; flex-direction: column; }
+        textarea { flex: 1; padding: 15px; font-family: 'Consolas', monospace; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; resize: none; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .button-bar { padding: 10px 0; }
+        .run-btn { background: #04AA6D; color: white; border: none; padding: 12px 25px; cursor: pointer; font-size: 1rem; border-radius: 4px; font-weight: bold; transition: 0.3s; }
+        .run-btn:hover { background: #059862; }
+        .result-section { flex: 1; background: white; border: 1px solid #ccc; border-radius: 4px; overflow: auto; padding: 15px; }
+        table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; position: sticky; top: 0; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .error { color: #d9534f; font-weight: bold; padding: 10px; border: 1px solid #d9534f; border-radius: 4px; background: #fdf7f7; }
+    </style>
+</head>
+<body>
+
+<div class="header">SQL TryIt - Öğrenci Eğitim Paneli</div>
+
+<div class="main">
+    <div class="editor-section">
+        <textarea id="sql-input">-- Örnek sorgu:
+SELECT * FROM Ogrenciler;</textarea>
+        <div class="button-bar">
+            <button class="run-btn" onclick="executeSQL()">Sorguyu Çalıştır »</button>
+        </div>
+    </div>
+    <div class="result-section" id="output">
+        <p style="color: #666;">Sorgu sonucunu görmek için yukarıdaki butona tıklayın.</p>
+    </div>
+</div>
+
+<script>
+    let db;
+
+    // SQL.js Başlatma Ayarları
+    const config = {
+        locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${filename}`
+    };
+
+    // Sayfa açıldığında veritabanını ve örnek verileri kur
+    initSqlJs(config).then(SQL => {
+        db = new SQL.Database();
+        
+        // Örnek Tabloları Oluştur
+        db.run(`
+            CREATE TABLE Ogrenciler (id INTEGER, isim TEXT, bolum TEXT, not_ort REAL);
+            INSERT INTO Ogrenciler VALUES (1, 'Saliha K.', 'Yazılım', 3.8);
+            INSERT INTO Ogrenciler VALUES (2, 'Ayşe Y.', 'Bilgisayar', 3.5);
+            INSERT INTO Ogrenciler VALUES (3, 'Mehmet A.', 'Siber Güvenlik', 3.2);
+            
+            CREATE TABLE Dersler (ders_id INTEGER, ders_adi TEXT);
+            INSERT INTO Dersler VALUES (101, 'Veritabanı'), (102, 'Programlama');
+        `);
+        console.log("SQL Motoru Hazır!");
+    });
+
+    function executeSQL() {
+        const sqlValue = document.getElementById("sql-input").value;
+        const outputDiv = document.getElementById("output");
+        
+        try {
+            const res = db.exec(sqlValue);
+            
+            if (res.length === 0) {
+                outputDiv.innerHTML = "<p>Sorgu başarıyla çalıştırıldı fakat dönecek bir veri yok (INSERT/UPDATE/CREATE).</p>";
+                return;
+            }
+
+            // Tablo Oluşturma
+            let html = "<table><thead><tr>";
+            res[0].columns.forEach(col => html += `<th>${col}</th>`);
+            html += "</tr></thead><tbody>";
+            
+            res[0].values.forEach(row => {
+                html += "<tr>";
+                row.forEach(val => html += `<td>${val}</td>`);
+                html += "</tr>";
+            });
+            html += "</tbody></table>";
+            outputDiv.innerHTML = html;
+
+        } catch (err) {
+            outputDiv.innerHTML = `<div class="error">Hata: ${err.message}</div>`;
+        }
+    }
+</script>
+
+</body>
+</html>
