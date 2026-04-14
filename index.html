@@ -3,92 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQL Master Lab | İnteraktif Öğrenme</title>
+    <title>SQL Master Lab | Advanced Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
     <style>
-        :root { --primary: #9E0B2D; --secondary: #04AA6D; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: var(--bg); }
+        :root { --primary: #9E0B2D; --secondary: #04AA6D; --bg: #f4f7f6; --dark-panel: #282c34; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: var(--bg); color: #333; }
         
-        /* Header */
-        .navbar { background: var(--primary); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Main Layout */
-        .workspace { display: grid; grid-template-columns: 300px 1fr 300px; flex: 1; overflow: hidden; gap: 5px; padding: 5px; }
-        
-        /* Panels */
-        .panel { background: white; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
-        .panel-header { background: #eee; padding: 10px; font-weight: bold; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
-        
-        /* Soru Bölümü */
-        .task-area { padding: 15px; overflow-y: auto; line-height: 1.5; }
-        .task-card { border-left: 4px solid var(--primary); background: #fff5f5; padding: 10px; margin-bottom: 10px; }
+        /* Navigasyon */
+        .navbar { background: var(--primary); color: white; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .status-badge { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; }
 
-        /* Editör Bölümü */
-        .editor-container { flex: 1; display: flex; flex-direction: column; }
-        textarea { flex: 1; border: none; padding: 15px; font-family: 'Consolas', monospace; font-size: 16px; outline: none; background: #282c34; color: #abb2bf; resize: none; }
+        /* Ana Alan */
+        .workspace { display: grid; grid-template-columns: 320px 1fr 300px; flex: 1; overflow: hidden; gap: 8px; padding: 8px; }
         
-        /* Sonuç Bölümü */
-        .result-area { height: 250px; background: white; border-top: 5px solid #ddd; overflow: auto; padding: 10px; }
+        .panel { background: white; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        .panel-header { background: #f8f9fa; padding: 12px; font-weight: bold; border-bottom: 1px solid #dee2e6; font-size: 0.85rem; color: #555; display: flex; align-items: center; justify-content: space-between; }
+        
+        /* Görev Listesi */
+        .task-area { padding: 10px; overflow-y: auto; background: #fafafa; }
+        .task-card { background: white; border: 1px solid #e0e0e0; border-left: 5px solid var(--primary); padding: 12px; margin-bottom: 10px; border-radius: 4px; font-size: 0.9rem; transition: 0.2s; cursor: help; }
+        .task-card:hover { transform: translateX(5px); box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
+        .task-card strong { color: var(--primary); display: block; margin-bottom: 4px; }
+        .task-card code { background: #eee; padding: 2px 4px; border-radius: 3px; font-size: 0.8rem; }
+
+        /* Editör */
+        .editor-container { flex: 1; display: flex; flex-direction: column; }
+        textarea { flex: 1; border: none; padding: 20px; font-family: 'Fira Code', 'Consolas', monospace; font-size: 15px; outline: none; background: var(--dark-panel); color: #abb2bf; resize: none; line-height: 1.5; }
+        
+        /* Çıktı Alanı */
+        .result-area { height: 280px; background: white; border-top: 4px solid #dee2e6; overflow: auto; padding: 15px; }
         
         /* Butonlar */
-        .actions { padding: 10px; background: #eee; display: flex; gap: 10px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .actions { padding: 12px; background: #f8f9fa; display: flex; gap: 12px; border-top: 1px solid #dee2e6; }
+        .btn { padding: 10px 22px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
         .btn-run { background: var(--secondary); color: white; }
-        .btn-reset { background: #666; color: white; }
-        .btn:hover { opacity: 0.8; }
+        .btn-run:hover { background: #05935e; transform: scale(1.02); }
+        .btn-reset { background: #6c757d; color: white; }
+        
+        /* Tablo Tasarımı */
+        table { border-collapse: collapse; width: 100%; margin-top: 5px; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        th, td { border: 1px solid #e9ecef; padding: 10px 12px; text-align: left; font-size: 0.85rem; }
+        th { background: #f1f3f5; color: #495057; position: sticky; top: 0; font-weight: 600; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #f1f3f5; }
 
-        /* Tablo ve Veri Yapısı */
-        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
-        th { background: #f8f9fa; position: sticky; top: 0; }
-        .schema-item { font-size: 13px; padding: 5px 10px; border-bottom: 1px solid #eee; }
-        .schema-table-name { font-weight: bold; color: var(--primary); }
-        .error { color: #d9534f; background: #fdf7f7; padding: 10px; border-radius: 4px; }
+        /* Şema Listesi */
+        .schema-item { padding: 12px; border-bottom: 1px solid #f1f3f5; }
+        .schema-table-name { font-weight: bold; color: var(--primary); margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .schema-col { font-size: 0.75rem; color: #666; display: inline-block; background: #f1f1f1; padding: 2px 6px; border-radius: 10px; margin: 2px; }
+        .error { color: #721c24; background: #f8d7da; padding: 15px; border-radius: 6px; border-left: 5px solid #f5c6cb; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="navbar">
-    <div>SQL Master Laboratory</div>
-    <div id="status">Yükleniyor...</div>
+    <div style="font-size: 1.4rem; letter-spacing: 1px; font-weight: 800;">SQL <span style="font-weight: 300;">MASTER</span> LAB</div>
+    <div class="status-badge" id="status">Sistem Yükleniyor...</div>
 </div>
 
 <div class="workspace">
     <div class="panel">
-        <div class="panel-header">🎯 ÖĞRENME GÖREVLERİ</div>
+        <div class="panel-header">🎯 UYGULAMA GÖREVLERİ (0-10)</div>
         <div class="task-area">
-            <div class="task-card">
-                <strong>Görev 1:</strong> Tüm öğrencileri listeleyin.<br>
-                <small>İpucu: SELECT * FROM ...</small>
-            </div>
-            <div class="task-card">
-                <strong>Görev 2:</strong> 'Yazılım' bölümündeki öğrencileri getirin.
-            </div>
-            <div class="task-card">
-                <strong>Görev 3:</strong> Yeni bir tablo oluşturun (CREATE) veya veri ekleyin (INSERT).
-            </div>
+            <div class="task-card"><strong>1. Temel:</strong> <code>Ogrenciler</code> tablosundaki herkesin ismini ve yaşını listeleyin.</div>
+            <div class="task-card"><strong>2. Filtre:</strong> Yaşı 21'den büyük olan öğrencileri getirin.</div>
+            <div class="task-card"><strong>3. İlişki (JOIN):</strong> Öğrenci isimlerini ve bağlı oldukları <code>bolum_adi</code> bilgisini beraber listeleyin.</div>
+            <div class="task-card"><strong>4. Sıralama:</strong> Notları yüksekten düşüğe doğru öğrenci isimleriyle listeleyin.</div>
+            <div class="task-card"><strong>5. Gruplama:</strong> Hangi bölümde kaç öğrenci olduğunu <code>COUNT</code> ile bulun.</div>
+            <div class="task-card"><strong>6. Matematik:</strong> Tüm öğrencilerin genel not ortalamasını bulun.</div>
+            <div class="task-card"><strong>7. Güncelleme:</strong> 'SQL' dersi notu 90'dan küçük olan herkese +5 puan ekleyin.</div>
+            <div class="task-card"><strong>8. Yeni Kayıt:</strong> Kendi bilgilerinizi <code>Ogrenciler</code> tablosuna <code>INSERT</code> edin.</div>
+            <div class="task-card"><strong>9. Alt Sorgu:</strong> En yüksek notu alan öğrencinin ismini bulun.</div>
+            <div class="task-card"><strong>10. Silme:</strong> <code>id</code> numarası 5 olan öğrenciyi veritabanından silin.</div>
         </div>
     </div>
 
     <div class="editor-container">
         <div class="panel" style="flex:1">
-            <div class="panel-header">💻 SQL QUERY EDITOR</div>
-            <textarea id="sql-input">-- Buraya SQL sorgunuzu yazın
-SELECT * FROM Ogrenciler;</textarea>
+            <div class="panel-header">💻 SQL QUERY EDITOR <span>v2.0</span></div>
+            <textarea id="sql-input">-- ÖRNEK: Bölüm bazlı ortalama notları getir
+SELECT o.bolum, AVG(n.notu) as Ortalama
+FROM Ogrenciler o
+JOIN Notlar n ON o.id = n.ogrenci_id
+GROUP BY o.bolum;</textarea>
             <div class="actions">
-                <button class="btn btn-run" onclick="executeSQL()">Sorguyu Çalıştır (Run) »</button>
-                <button class="btn btn-reset" onclick="resetDatabase()">Verileri Sıfırla</button>
+                <button class="btn btn-run" onclick="executeSQL()">▶ Sorguyu Çalıştır</button>
+                <button class="btn btn-reset" onclick="resetDatabase()">↺ Reset</button>
             </div>
             <div class="result-area" id="output">
-                <p style="color: #999;">Sonuçlar burada görünecek...</p>
+                <p style="color: #999; text-align: center; margin-top: 50px;">Sorgu sonucunu görmek için Run butonuna basın.</p>
             </div>
         </div>
     </div>
 
     <div class="panel">
         <div class="panel-header">📊 VERİTABANI ŞEMASI</div>
-        <div id="schema-area" style="overflow-y: auto;">
-            </div>
+        <div id="schema-area" style="overflow-y: auto; flex: 1;"></div>
     </div>
 </div>
 
@@ -97,51 +108,63 @@ SELECT * FROM Ogrenciler;</textarea>
     const outputDiv = document.getElementById("output");
     const schemaArea = document.getElementById("schema-area");
 
-    const config = {
-        locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${filename}`
-    };
+    const config = { locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${filename}` };
 
-    // SQL Motorunu Başlat
     initSqlJs(config).then(SQL => {
         db = new SQL.Database();
-        createDefaultData();
-        document.getElementById("status").innerText = "● SQL Engine Ready";
+        setupDatabase();
+        document.getElementById("status").innerText = "● SQL Engine Active";
         updateSchema();
     });
 
-    function createDefaultData() {
+    function setupDatabase() {
         db.run(`
-            CREATE TABLE Ogrenciler (id INTEGER PRIMARY KEY, isim TEXT, bolum TEXT, puan INTEGER);
-            INSERT INTO Ogrenciler VALUES (1, 'Saliha K.', 'Yazılım', 95);
-            INSERT INTO Ogrenciler VALUES (2, 'Caner Y.', 'Bilişim', 88);
-            INSERT INTO Ogrenciler VALUES (3, 'Elif A.', 'Yazılım', 92);
-            
-            CREATE TABLE Bolumler (id INTEGER, ad TEXT);
-            INSERT INTO Bolumler VALUES (1, 'Yazılım'), (2, 'Bilişim');
+            -- Bölümler
+            CREATE TABLE Bolumler (id INTEGER PRIMARY KEY, bolum_adi TEXT);
+            INSERT INTO Bolumler VALUES (1, 'Yazılım'), (2, 'Bilişim'), (3, 'Siber Güvenlik');
+
+            -- Öğrenciler
+            CREATE TABLE Ogrenciler (id INTEGER PRIMARY KEY, isim TEXT, bolum TEXT, yas INTEGER);
+            INSERT INTO Ogrenciler VALUES 
+            (1, 'Saliha K.', 'Yazılım', 20), 
+            (2, 'Caner Y.', 'Bilişim', 22), 
+            (3, 'Elif A.', 'Yazılım', 21),
+            (4, 'Mert G.', 'Siber Güvenlik', 23),
+            (5, 'Hakan B.', 'Bilişim', 19);
+
+            -- Notlar
+            CREATE TABLE Notlar (id INTEGER PRIMARY KEY, ogrenci_id INTEGER, ders TEXT, notu INTEGER);
+            INSERT INTO Notlar VALUES 
+            (1, 1, 'SQL', 95), (2, 1, 'Web', 88),
+            (3, 2, 'SQL', 72), (4, 3, 'SQL', 92),
+            (5, 4, 'Siber', 100), (6, 5, 'Web', 65);
         `);
     }
 
     function executeSQL() {
         const sqlValue = document.getElementById("sql-input").value;
+        const start = performance.now();
         try {
             const res = db.exec(sqlValue);
-            updateSchema(); // Her sorgudan sonra şemayı güncelle (CREATE/DROP için)
+            const end = performance.now();
+            updateSchema();
 
             if (res.length === 0) {
-                outputDiv.innerHTML = `<div style="color:var(--secondary)">✓ Sorgu başarıyla çalıştırıldı. Etkilenen satır yok veya işlem başarılı.</div>`;
+                outputDiv.innerHTML = `<div style="color:var(--secondary); font-weight:bold;">✓ İşlem Başarılı. (Süre: ${(end-start).toFixed(2)}ms)</div>`;
                 return;
             }
 
-            let html = "<table><thead><tr>";
+            let html = ` <div style="font-size:0.7rem; color:#999; margin-bottom:5px;">Sorgu Süresi: ${(end-start).toFixed(2)}ms</div>`;
+            html += "<table><thead><tr>";
             res[0].columns.forEach(col => html += `<th>${col}</th>`);
             html += "</tr></thead><tbody>";
             res[0].values.forEach(row => {
-                html += "<tr>" + row.map(v => `<td>${v ?? 'NULL'}</td>`).join("") + "</tr>";
+                html += "<tr>" + row.map(v => `<td>${v ?? '<i style="color:#ccc">NULL</i>'}</td>`).join("") + "</tr>";
             });
             outputDiv.innerHTML = html + "</tbody></table>";
 
         } catch (err) {
-            outputDiv.innerHTML = `<div class="error">⚠️ SQL Hatası: ${err.message}</div>`;
+            outputDiv.innerHTML = `<div class="error"><strong>⚠️ SQL HATASI:</strong><br>${err.message}</div>`;
         }
     }
 
@@ -152,21 +175,19 @@ SELECT * FROM Ogrenciler;</textarea>
             if (tables.length > 0) {
                 tables[0].values.forEach(tableName => {
                     const cols = db.exec(`PRAGMA table_info(${tableName[0]})`);
-                    let colList = cols[0].values.map(c => `<span style="color:#666">${c[1]} (${c[2]})</span>`).join(", ");
+                    let colHtml = cols[0].values.map(c => `<span class="schema-col">${c[1]}</span>`).join("");
                     schemaArea.innerHTML += `
                         <div class="schema-item">
                             <div class="schema-table-name">📁 ${tableName[0]}</div>
-                            <div style="font-size:11px; margin-left:15px;">${colList}</div>
+                            <div>${colHtml}</div>
                         </div>`;
                 });
             }
-        } catch (e) { console.log("Şema hatası"); }
+        } catch (e) { console.error(e); }
     }
 
     function resetDatabase() {
-        if(confirm("Tüm veriler sıfırlanacak, emin misiniz?")) {
-            location.reload();
-        }
+        if(confirm("Tüm değişiklikler silinecek. Emin misiniz?")) location.reload();
     }
 </script>
 
